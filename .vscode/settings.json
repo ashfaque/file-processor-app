@@ -1,0 +1,34 @@
+{
+    // --- PYTHON SETTINGS (for apps/backend) ---
+    "python.defaultInterpreterPath": "~/.conda/envs/fileenv/python.exe",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
+            // "source.sortImports": "always"
+        },
+    },
+    "black-formatter.args": [
+        "--line-length",
+        "120"
+    ],
+    "pylint.args": [
+        "--rcfile=.vscode/.pylintrc"
+    ],
+    // "isort.args": ["--settings-path", ".vscode/.isort.cfg"],
+    // "editor.defaultFormatter": "ms-python.black-formatter",
+    // "editor.formatOnSave": true,
+    // --- GENERAL SETTINGS ---
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "**/__pycache__": true, // Exclude Python cache from file explorer
+      "**/.pytest_cache": true,
+      "**/node_modules": true // Exclude node_modules from file explorer
+    }
+}
