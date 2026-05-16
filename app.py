@@ -3,161 +3,170 @@ from dash import dcc, html
 from callbacks import register_callbacks
 
 # Initialize the Dash app
+# Dash automatically serves files from the 'assets' folder, including style.css
 app = dash.Dash(__name__, title="Universal Media Processor")
 
-# Clean, simple inline CSS
-STYLES = {
-    "container": {"maxWidth": "800px", "margin": "0 auto", "padding": "20px", "fontFamily": "Arial"},
-    "card": {"border": "1px solid #ddd", "padding": "20px", "borderRadius": "8px", "marginBottom": "20px"},
-    "upload": {
-        "width": "100%",
-        "height": "100px",
-        "lineHeight": "100px",
-        "borderWidth": "2px",
-        "borderStyle": "dashed",
-        "borderRadius": "5px",
-        "textAlign": "center",
-        "cursor": "pointer",
-    },
-    "row": {"display": "flex", "gap": "20px", "marginBottom": "15px"},
-    "file_list_container": {
-        "maxHeight": "200px",
-        "overflowY": "auto",
-        "marginTop": "15px",
-        "border": "1px solid #eee",
-        "padding": "10px",
-        "borderRadius": "5px",
-        "backgroundColor": "#fafafa",
-    },
-}
-
 app.layout = html.Div(
-    style=STYLES["container"],
+    className="page-container",
     children=[
-        html.H1("Universal Media Processor"),
-        html.P("Drag and drop your files. Adjust settings below and process."),
-        # --- INVISIBLE APP MEMORY ---
-        dcc.Store(id="file-store", data={}),
-        # --- UPLOAD SECTION ---
         html.Div(
-            style=STYLES["card"],
+            className="content-wrapper",
             children=[
-                dcc.Upload(
-                    id="upload-data",
-                    children=html.Div(["Drag and Drop or ", html.A("Click to Select Multiple Files")]),
-                    style=STYLES["upload"],
-                    multiple=True,
-                ),
-                html.Div(id="file-list-ui", style=STYLES["file_list_container"]),
-            ],
-        ),
-        # --- CONTROLS SECTION ---
-        html.Div(
-            style=STYLES["card"],
-            children=[
-                html.H3("Processing Options"),
-                html.Label("JPEG Compression Quality (Lower = Smaller File):"),
-                dcc.Slider(
-                    id="slider-quality",
-                    min=10,
-                    max=100,
-                    step=1,
-                    value=65,
-                    marks={10: "10 (Lowest)", 65: "65 (Optimal)", 100: "100 (Highest)"},
-                ),
-                html.Br(),
+                # --- HEADER ---
                 html.Div(
-                    style=STYLES["row"],
+                    className="header-section",
                     children=[
-                        html.Div(
-                            [
-                                html.Label("Convert Format:"),
-                                dcc.Dropdown(
-                                    id="dropdown-format",
-                                    options=[
-                                        {"label": "Keep Original", "value": "ORIGINAL"},
-                                        {"label": "To JPEG", "value": "JPEG"},
-                                        {"label": "To PNG", "value": "PNG"},
-                                    ],
-                                    value="ORIGINAL",
-                                    clearable=False,  # 🛠️ FIX: Prevents user from clearing the dropdown
-                                ),
-                            ],
-                            style={"flex": 1},
-                        ),
-                        html.Div(
-                            [
-                                html.Label("Rotate:"),
-                                dcc.Dropdown(
-                                    id="dropdown-rotate",
-                                    options=[
-                                        {"label": "None", "value": 0},
-                                        {"label": "90° Clockwise", "value": 90},
-                                        {"label": "90° Counter-Clockwise", "value": -90},
-                                        {"label": "180°", "value": 180},
-                                    ],
-                                    value=0,
-                                    clearable=False,  # 🛠️ FIX: Prevents user from clearing the dropdown
-                                ),
-                            ],
-                            style={"flex": 1},
-                        ),
+                        html.H1("Image Processor", className="main-title"),
+                        html.P("Precision media processing engine.", className="sub-title"),
                     ],
                 ),
+                # --- INVISIBLE APP MEMORY ---
+                dcc.Store(id="file-store", data={}),
+                # --- UPLOAD SECTION ---
                 html.Div(
-                    style=STYLES["row"],
+                    className="ui-card",
                     children=[
+                        html.Div("I. Workspace", className="card-title"),
+                        dcc.Upload(
+                            id="upload-data",
+                            className="upload-area",
+                            children=html.Div(["Drag and Drop or ", html.B("Select Media")], className="upload-text"),
+                            multiple=True,
+                        ),
+                        html.Div(id="file-list-ui", className="file-list-container"),
+                    ],
+                ),
+                # --- CONTROLS SECTION ---
+                html.Div(
+                    className="ui-card",
+                    children=[
+                        html.Div("II. Parameters", className="card-title"),
+                        # Quality Slider
                         html.Div(
-                            [
-                                html.Label("Flip Image:"),
-                                dcc.Checklist(
-                                    id="check-flip",
-                                    options=[
-                                        {"label": " Horizontal  ", "value": "H"},
-                                        {"label": " Vertical", "value": "V"},
-                                    ],
-                                    value=[],
-                                    inline=True,
+                            className="slider-container",
+                            children=[
+                                html.Label("Compression Ratio", className="input-label"),
+                                dcc.Slider(
+                                    id="slider-quality",
+                                    min=10,
+                                    max=100,
+                                    step=1,
+                                    value=65,
+                                    marks={10: "Aggressive", 65: "Optimal", 100: "Lossless"},
                                 ),
                             ],
-                            style={"flex": 1},
                         ),
+                        # Format & Rotate
                         html.Div(
-                            [
-                                html.Label("Crop Pixels (Left, Top, Right, Bottom):"),
+                            className="input-row",
+                            children=[
                                 html.Div(
-                                    [
-                                        dcc.Input(
-                                            id="crop-left", type="number", placeholder="L", style={"width": "50px"}
-                                        ),
-                                        dcc.Input(
-                                            id="crop-top", type="number", placeholder="T", style={"width": "50px"}
-                                        ),
-                                        dcc.Input(
-                                            id="crop-right", type="number", placeholder="R", style={"width": "50px"}
-                                        ),
-                                        dcc.Input(
-                                            id="crop-bottom", type="number", placeholder="B", style={"width": "50px"}
+                                    className="input-group",
+                                    children=[
+                                        html.Label("Target Format", className="input-label"),
+                                        dcc.Dropdown(
+                                            id="dropdown-format",
+                                            className="dash-dropdown",
+                                            options=[
+                                                {"label": "Preserve Original", "value": "ORIGINAL"},
+                                                {"label": "Force JPEG", "value": "JPEG"},
+                                                {"label": "Force PNG", "value": "PNG"},
+                                            ],
+                                            value="ORIGINAL",
+                                            clearable=False,
                                         ),
                                     ],
-                                    style={"display": "flex", "gap": "5px"},
+                                ),
+                                html.Div(
+                                    className="input-group",
+                                    children=[
+                                        html.Label("Rotation Matrix", className="input-label"),
+                                        dcc.Dropdown(
+                                            id="dropdown-rotate",
+                                            className="dash-dropdown",
+                                            options=[
+                                                {"label": "0° (Default)", "value": 0},
+                                                {"label": "90° Clockwise", "value": 90},
+                                                {"label": "90° Counter-Clockwise", "value": -90},
+                                                {"label": "180° Inverted", "value": 180},
+                                            ],
+                                            value=0,
+                                            clearable=False,
+                                        ),
+                                    ],
                                 ),
                             ],
-                            style={"flex": 1},
+                        ),
+                        # Flip & Crop
+                        html.Div(
+                            className="input-row",
+                            children=[
+                                html.Div(
+                                    className="input-group",
+                                    children=[
+                                        html.Label("Axis Mirroring", className="input-label"),
+                                        html.Div(
+                                            className="checkbox-container",
+                                            children=[
+                                                dcc.Checklist(
+                                                    id="check-flip",
+                                                    className="custom-checklist",
+                                                    options=[
+                                                        {"label": " X-Axis ", "value": "H"},
+                                                        {"label": " Y-Axis ", "value": "V"},
+                                                    ],
+                                                    value=[],
+                                                    inline=True,
+                                                )
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                                html.Div(
+                                    className="input-group",
+                                    children=[
+                                        html.Label("Pixel Crop Bounds (L, T, R, B)", className="input-label"),
+                                        html.Div(
+                                            className="crop-input-wrapper",
+                                            children=[
+                                                dcc.Input(
+                                                    id="crop-left",
+                                                    type="number",
+                                                    placeholder="L",
+                                                    className="number-input",
+                                                ),
+                                                dcc.Input(
+                                                    id="crop-top",
+                                                    type="number",
+                                                    placeholder="T",
+                                                    className="number-input",
+                                                ),
+                                                dcc.Input(
+                                                    id="crop-right",
+                                                    type="number",
+                                                    placeholder="R",
+                                                    className="number-input",
+                                                ),
+                                                dcc.Input(
+                                                    id="crop-bottom",
+                                                    type="number",
+                                                    placeholder="B",
+                                                    className="number-input",
+                                                ),
+                                            ],
+                                        ),
+                                    ],
+                                ),
+                            ],
                         ),
                     ],
                 ),
+                # --- ACTION SECTION ---
+                html.Button("Initialize Sequence", id="process-btn", n_clicks=0, className="process-btn"),
+                html.Div(id="status-message", className="status-msg"),
+                dcc.Download(id="download-zip"),
             ],
         ),
-        # --- ACTION SECTION ---
-        html.Button(
-            "Process & Download ZIP",
-            id="process-btn",
-            n_clicks=0,
-            style={"width": "100%", "padding": "15px", "fontSize": "16px", "cursor": "pointer"},
-        ),
-        html.Div(id="status-message", style={"marginTop": "20px", "fontWeight": "bold", "textAlign": "center"}),
-        dcc.Download(id="download-zip"),
     ],
 )
 

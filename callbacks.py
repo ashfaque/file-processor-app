@@ -39,32 +39,17 @@ def register_callbacks(app):
     @app.callback(Output("file-list-ui", "children"), Input("file-store", "data"))
     def update_ui_list(store_data):
         if not store_data:
-            return html.Div("No files queued for processing.", style={"color": "#888", "fontStyle": "italic"})
+            return html.Div("No files queued for processing.", className="file-list-empty")
 
         items = []
         for filename in store_data.keys():
             items.append(
                 html.Div(
-                    [
+                    className="file-list-item",
+                    children=[
                         html.Span(f"📄 {filename}"),
-                        html.Button(
-                            "❌",
-                            id={"type": "delete-btn", "index": filename},
-                            style={
-                                "color": "red",
-                                "border": "none",
-                                "background": "none",
-                                "cursor": "pointer",
-                                "fontSize": "16px",
-                            },
-                        ),
+                        html.Button("❌", id={"type": "delete-btn", "index": filename}, className="delete-btn"),
                     ],
-                    style={
-                        "display": "flex",
-                        "justifyContent": "space-between",
-                        "padding": "8px 5px",
-                        "borderBottom": "1px solid #ddd",
-                    },
                 )
             )
         return items
@@ -93,7 +78,6 @@ def register_callbacks(app):
         contents = list(file_store.values())
         flip_options = flip_options or []
 
-        # 🛠️ FIX: Fallback to defaults if any value somehow arrives as None
         options = {
             "quality": quality if quality is not None else 65,
             "format": fmt if fmt is not None else "ORIGINAL",
@@ -117,13 +101,29 @@ def register_callbacks(app):
                 input_path = os.path.join(input_dir, filename)
                 process_single_image(input_path, output_dir, filename, options)
 
-            zip_path = os.path.join(temp_base, "processed_media.zip")
-            create_zip_archive(output_dir, zip_path)
+            # --- Check how many files we processed ---
+            processed_files = os.listdir(output_dir)
 
-            with open(zip_path, "rb") as f:
-                zip_data = f.read()
+            if len(processed_files) == 1:
+                # If only 1 file, read it directly and send it (no zip)
+                single_filename = processed_files[0]
+                file_path = os.path.join(output_dir, single_filename)
+                with open(file_path, "rb") as f:
+                    file_data = f.read()
+                return dcc.send_bytes(file_data, single_filename), "✅ Successfully processed 1 file!"
 
-            return dcc.send_bytes(zip_data, "processed_media.zip"), f"✅ Successfully processed {len(filenames)} files!"
+            else:
+                # If multiple files, zip them up as usual
+                zip_path = os.path.join(temp_base, "processed_media.zip")
+                create_zip_archive(output_dir, zip_path)
+
+                with open(zip_path, "rb") as f:
+                    zip_data = f.read()
+
+                return (
+                    dcc.send_bytes(zip_data, "processed_media.zip"),
+                    f"✅ Successfully processed {len(filenames)} files!",
+                )
 
         except Exception as e:
             return None, f"❌ An error occurred: {str(e)}"
