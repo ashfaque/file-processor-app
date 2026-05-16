@@ -8,6 +8,12 @@ app = dash.Dash(__name__, title="Universal Media Processor")
 
 server = app.server
 
+
+@server.route("/health")
+def health_check():
+    return "Ok", 200
+
+
 app.layout = html.Div(
     className="page-container",
     children=[
