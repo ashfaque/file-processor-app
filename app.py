@@ -6,6 +6,8 @@ from callbacks import register_callbacks
 # Dash automatically serves files from the 'assets' folder, including style.css
 app = dash.Dash(__name__, title="Universal Media Processor")
 
+server = app.server
+
 app.layout = html.Div(
     className="page-container",
     children=[
